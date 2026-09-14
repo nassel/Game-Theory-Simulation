@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Theory Simulation</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Game Theory Simulation</h1>
+            <div class="game-selector">
+                <label for="gameSelect">Game: </label>
+                <select id="gameSelect">
+                    <option value="prisonerDilemma">Prisoner's Dilemma</option>
+                    <option value="nashEquilibrium">Nash Equilibrium</option>
+                    <option value="cournot">Cournot Competition</option>
+                </select>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="controls-panel" id="controlsPanel">
+                <!-- Controls injected here by game modules -->
+            </div>
+
+            <div class="visualization-panel">
+                <canvas id="simCanvas" width="800" height="500"></canvas>
+                <div class="legend" id="legend"></div>
+            </div>
+        </main>
+
+        <footer class="status-bar">
+            <div id="statusText">Ready</div>
+            <div class="simulation-controls">
+                <button id="btnPlay" class="btn">▶ Play</button>
+                <button id="btnPause" class="btn" disabled>⏸ Pause</button>
+                <button id="btnStep" class="btn">⏭ Step</button>
+                <button id="btnReset" class="btn">↻ Reset</button>
+                <input type="range" id="speedSlider" min="1" max="60" value="10" title="Speed (steps/sec)">
+                <span id="speedLabel">10/s</span>
+            </div>
+        </footer>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
