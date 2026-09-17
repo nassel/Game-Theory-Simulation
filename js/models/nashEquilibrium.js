@@ -107,7 +107,7 @@ export function calculateBestResponses(matrix, mix1, mix2) {
         for (let j = 0; j < n; j++) {
             payoff1 += mix2[j] * matrix[i][j][0];
         }
-        br1.push(payoff);
+        br1.push(payoff1);
     }
 
     for (let j = 0; j < n; j++) {
@@ -115,7 +115,7 @@ export function calculateBestResponses(matrix, mix1, mix2) {
         for (let i = 0; i < n; i++) {
             payoff2 += mix1[i] * matrix[i][j][1];
         }
-        br2.push(payoff);
+        br2.push(payoff2);
     }
 
     const max1 = Math.max(...br1);

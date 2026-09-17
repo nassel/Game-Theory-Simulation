@@ -24,6 +24,8 @@ let unsubscribe = null;
 function init() {
     setupEventListeners();
     engine.setGame('prisonerDilemma');
+    currentModel = MODEL_MODULES['prisonerDilemma'];
+    renderControls('prisonerDilemma');
     unsubscribe = engine.subscribe(onStateChange);
     engine.startLoop(render);
     window.addEventListener('resize', () => renderer.resize());
@@ -89,6 +91,9 @@ function dispatch(action) {
                 params = { ...params, nashEquilibrium: Cournot.findCournotNashEquilibrium(a, b, c1, c2) };
             }
             engine.updateParams(params);
+            if (state.type === 'cournot') {
+                Cournot.updateEquilibriumDisplay({ ...state, ...params });
+            }
             break;
         }
         case 'UPDATE_MATRIX': {

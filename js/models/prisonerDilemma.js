@@ -27,7 +27,7 @@ export function createInitialState(params = {}) {
     };
 }
 
-export function getStrategyMove(strategy, opponentHistory, round) {
+export function getStrategyMove(strategy, opponentHistory, round, myHistory = [], payoffs = DEFAULT_PAYOFFS) {
     switch (strategy) {
         case 'ALWAYS_COOPERATE':
             return STRATEGIES.COOPERATE;
@@ -45,20 +45,13 @@ export function getStrategyMove(strategy, opponentHistory, round) {
             return opponentHistory.includes(STRATEGIES.DEFECT) ? STRATEGIES.DEFECT : STRATEGIES.COOPERATE;
         case 'PAVLOV':
             if (round === 0) return STRATEGIES.COOPERATE;
-            const myLast = round > 0 ? 'self' : STRATEGIES.COOPERATE;
+            const myLast = myHistory[round - 1];
             const oppLast = opponentHistory[round - 1];
-            const payoff = getPayoff(myLast, oppLast);
-            return payoff >= 3 ? myLast : (myLast === STRATEGIES.COOPERATE ? STRATEGIES.DEFECT : STRATEGIES.COOPERATE);
+            const myPayoff = calculatePayoff(myLast, oppLast, payoffs)[0];
+            return myPayoff >= payoffs.R ? myLast : (myLast === STRATEGIES.COOPERATE ? STRATEGIES.DEFECT : STRATEGIES.COOPERATE);
         default:
             return STRATEGIES.COOPERATE;
     }
-}
-
-function getPayoff(myMove, oppMove) {
-    if (myMove === STRATEGIES.COOPERATE && oppMove === STRATEGIES.COOPERATE) return DEFAULT_PAYOFFS.R;
-    if (myMove === STRATEGIES.COOPERATE && oppMove === STRATEGIES.DEFECT) return DEFAULT_PAYOFFS.S;
-    if (myMove === STRATEGIES.DEFECT && oppMove === STRATEGIES.COOPERATE) return DEFAULT_PAYOFFS.T;
-    return DEFAULT_PAYOFFS.P;
 }
 
 export function calculatePayoff(move1, move2, payoffs) {
@@ -76,8 +69,8 @@ export function step(state) {
     const p1 = state.players[0];
     const p2 = state.players[1];
 
-    const move1 = getStrategyMove(p1.strategy, p2.history, state.round);
-    const move2 = getStrategyMove(p2.strategy, p1.history, state.round);
+    const move1 = getStrategyMove(p1.strategy, p2.history, state.round, p1.history, state.payoffs);
+    const move2 = getStrategyMove(p2.strategy, p1.history, state.round, p2.history, state.payoffs);
 
     const [payoff1, payoff2] = calculatePayoff(move1, move2, state.payoffs);
 
@@ -152,53 +145,51 @@ export function getControlsHTML() {
 }
 
 export function bindControls(state, dispatch) {
-    const updateValue = (id, valId, formatter = v => v) => {
-        const el = document.getElementById(id);
-        const valEl = document.getElementById(valId);
-        if (el && valEl) {
-            el.addEventListener('input', () => {
-                valEl.textContent = formatter(el.value);
-                dispatch({ type: 'UPDATE_PARAMS', params: { [id]: el.value } });
-            });
-        }
+    const dispatchPayoffs = () => {
+        const payoffs = {
+            T: parseFloat(document.getElementById('payoffT').value),
+            R: parseFloat(document.getElementById('payoffR').value),
+            P: parseFloat(document.getElementById('payoffP').value),
+            S: parseFloat(document.getElementById('payoffS').value)
+        };
+        dispatch({ type: 'UPDATE_PARAMS', params: { payoffs } });
+        updatePayoffMatrix(payoffs);
     };
 
-    updateValue('p1Strategy', 'p1StrategyVal');
-    updateValue('p2Strategy', 'p2StrategyVal');
-    updateValue('maxRounds', 'maxRoundsVal');
-    updateValue('payoffT', 'tVal');
-    updateValue('payoffR', 'rVal');
-    updateValue('payoffP', 'pVal');
-    updateValue('payoffS', 'sVal');
-
-    ['payoffT', 'payoffR', 'payoffP', 'payoffS'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.addEventListener('input', () => updatePayoffMatrix(state));
-        }
-    });
-
     document.getElementById('p1Strategy').addEventListener('change', (e) => {
+        document.getElementById('p1StrategyVal').textContent = e.target.value;
         dispatch({ type: 'UPDATE_PARAMS', params: { p1Strategy: e.target.value } });
     });
     document.getElementById('p2Strategy').addEventListener('change', (e) => {
+        document.getElementById('p2StrategyVal').textContent = e.target.value;
         dispatch({ type: 'UPDATE_PARAMS', params: { p2Strategy: e.target.value } });
     });
     document.getElementById('maxRounds').addEventListener('input', (e) => {
+        document.getElementById('maxRoundsVal').textContent = e.target.value;
         dispatch({ type: 'UPDATE_PARAMS', params: { maxRounds: parseInt(e.target.value) } });
     });
 
-    updatePayoffMatrix(state);
+    const bindPayoff = (id, valId) => {
+        const el = document.getElementById(id);
+        const valEl = document.getElementById(valId);
+        el.addEventListener('input', () => {
+            valEl.textContent = el.value;
+            dispatchPayoffs();
+        });
+    };
+    bindPayoff('payoffT', 'tVal');
+    bindPayoff('payoffR', 'rVal');
+    bindPayoff('payoffP', 'pVal');
+    bindPayoff('payoffS', 'sVal');
+
+    updatePayoffMatrix(state.payoffs);
 }
 
-function updatePayoffMatrix(state) {
+function updatePayoffMatrix(payoffs) {
     const container = document.getElementById('payoffMatrix');
     if (!container) return;
 
-    const T = parseFloat(document.getElementById('payoffT')?.value || state.payoffs.T);
-    const R = parseFloat(document.getElementById('payoffR')?.value || state.payoffs.R);
-    const P = parseFloat(document.getElementById('payoffP')?.value || state.payoffs.P);
-    const S = parseFloat(document.getElementById('payoffS')?.value || state.payoffs.S);
+    const { T, R, P, S } = payoffs;
 
     const isNash = (move1, move2) => {
         const [p1, p2] = calculatePayoff(move1, move2, { T, R, P, S });
@@ -215,8 +206,8 @@ function updatePayoffMatrix(state) {
         <div class="payoff-cell ${isNash('C','C') ? 'nash' : ''}">${R}, ${R}</div>
         <div class="payoff-cell ${isNash('C','D') ? 'nash' : ''}">${S}, ${T}</div>
         <div class="payoff-cell header">D</div>
-        <div class="payoff-cell ${isNash('D','C') ? 'nash' : ''}>${T}, ${S}</div>
-        <div class="payoff-cell ${isNash('D','D') ? 'nash' : ''}>${P}, ${P}</div>
+        <div class="payoff-cell ${isNash('D','C') ? 'nash' : ''}">${T}, ${S}</div>
+        <div class="payoff-cell ${isNash('D','D') ? 'nash' : ''}">${P}, ${P}</div>
     `;
 }
 

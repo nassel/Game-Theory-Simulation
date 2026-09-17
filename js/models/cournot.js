@@ -172,26 +172,26 @@ export function getControlsHTML() {
 }
 
 export function bindControls(state, dispatch) {
-    const updateValue = (id, valId, formatter = v => v) => {
+    const bindParam = (id, valId, key, formatter = v => v) => {
         const el = document.getElementById(id);
         const valEl = document.getElementById(valId);
         if (el && valEl) {
             el.addEventListener('input', () => {
-                const val = formatter(el.value);
-                valEl.textContent = val;
-                dispatch({ type: 'UPDATE_PARAMS', params: { [id.replace('param', '').replace('init', '')]: parseFloat(el.value) } });
+                const val = parseFloat(el.value);
+                valEl.textContent = formatter(val);
+                dispatch({ type: 'UPDATE_PARAMS', params: { [key]: val } });
             });
         }
     };
 
-    updateValue('paramA', 'aVal');
-    updateValue('paramB', 'bVal', v => parseFloat(v).toFixed(1));
-    updateValue('paramC1', 'c1Val');
-    updateValue('paramC2', 'c2Val');
-    updateValue('initQ1', 'q1Val');
-    updateValue('initQ2', 'q2Val');
-    updateValue('adjustmentSpeed', 'adjSpeedVal', v => parseFloat(v).toFixed(2));
-    updateValue('maxSteps', 'maxStepsVal');
+    bindParam('paramA', 'aVal', 'a');
+    bindParam('paramB', 'bVal', 'b', v => v.toFixed(1));
+    bindParam('paramC1', 'c1Val', 'c1');
+    bindParam('paramC2', 'c2Val', 'c2');
+    bindParam('initQ1', 'q1Val', 'q1');
+    bindParam('initQ2', 'q2Val', 'q2');
+    bindParam('adjustmentSpeed', 'adjSpeedVal', 'adjustmentSpeed', v => v.toFixed(2));
+    bindParam('maxSteps', 'maxStepsVal', 'maxSteps');
 
     document.getElementById('dynamics').addEventListener('change', (e) => {
         dispatch({ type: 'UPDATE_PARAMS', params: { dynamics: e.target.value } });
@@ -200,7 +200,7 @@ export function bindControls(state, dispatch) {
     updateEquilibriumDisplay(state);
 }
 
-function updateEquilibriumDisplay(state) {
+export function updateEquilibriumDisplay(state) {
     const container = document.getElementById('equilibriumInfo');
     if (!container) return;
 

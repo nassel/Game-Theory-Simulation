@@ -10,11 +10,11 @@ export class Renderer {
 
     resize() {
         const rect = this.canvas.getBoundingClientRect();
-        this.width = rect.width;
-        this.height = rect.height;
+        this.width = Math.max(1, rect.width);
+        this.height = Math.max(1, rect.height);
         this.canvas.width = this.width * this.dpr;
         this.canvas.height = this.height * this.dpr;
-        this.ctx.scale(this.dpr, this.dpr);
+        this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     }
 
     clear() {
@@ -45,7 +45,7 @@ export class Renderer {
         const chartWidth = this.width - padding * 2;
         const chartHeight = this.height - padding * 2 - 60;
 
-        this.drawAxes(padding, padding, chartWidth, chartHeight, maxRounds, Math.max(payoffs.T, payoffs.R, payoffs.P, payoffs.S) * 2);
+        this.drawAxes(padding, padding, chartWidth, chartHeight, Math.max(payoffs.T, payoffs.R, payoffs.P, payoffs.S) * 2);
 
         this.ctx.strokeStyle = '#666';
         this.ctx.lineWidth = 1;
@@ -131,14 +131,14 @@ export class Renderer {
             return;
         }
 
-        this.drawAxes(padding, padding, chartWidth, chartHeight, maxSteps, Math.max(a, ...history.flat()));
+        this.drawAxes(padding, padding, chartWidth, chartHeight, Math.max(a, ...history.flat()));
         this.drawQuantityChart(padding, padding, chartWidth, chartHeight, history, nashEquilibrium);
 
-        this.drawAxes(padding, padding + chartHeight + 40, chartWidth, chartHeight, maxSteps, Math.max(a, ...priceHistory));
+        this.drawAxes(padding, padding + chartHeight + 40, chartWidth, chartHeight, Math.max(a, ...priceHistory));
         this.drawPriceChart(padding, padding + chartHeight + 40, chartWidth, chartHeight, priceHistory, nashEquilibrium);
     }
 
-    drawAxes(x, y, width, height, maxX, maxY) {
+    drawAxes(x, y, width, height, maxY) {
         this.ctx.strokeStyle = '#3a3a5a';
         this.ctx.lineWidth = 1;
         this.ctx.beginPath();
